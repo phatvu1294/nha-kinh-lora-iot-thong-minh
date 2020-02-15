@@ -1,0 +1,224 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ESP32 LoRa Dashboard</title>
+</head>
+
+<body>
+  <div class="pnlLogin">
+    <div>Vui lòng nhập mật khẩu để truy cập vào bảng điều khiển!</div>
+    <input id="edtPass" placeholder="Nhập mật khẩu và nhấn Enter để tiếp tục" type="password"></input>
+    <input id="btnOK" type="button" value="OK"></input>
+  </div>
+  <div class="pnlDashboard">
+    <div id="Status">Trạng thái: <span id="lblStatus"></span></div>
+    <div id="Data">
+      <table id="tblData">
+        <tr>
+          <th></th>
+          <th>Vị trí 1</th>
+          <th>Vị trí 2</th>
+          <th>Vị trí 3</th>
+        </tr>
+        <tr>
+          <th>ID</th>
+          <td><span id="dataID1">N/A</span></td>
+          <td><span id="dataID2">N/A</span></td>
+          <td><span id="dataID3">N/A</span></td>
+        </tr>
+        <tr>
+          <th>Nhiệt độ</th>
+          <td><span id="dataTemp1">N/A</span></td>
+          <td><span id="dataTemp2">N/A</span></td>
+          <td><span id="dataTemp3">N/A</span></td>
+        </tr>
+        <tr>
+          <th>Độ ẩm</th>
+          <td><span id="dataHum1">N/A</span></td>
+          <td><span id="dataHum2">N/A</span></td>
+          <td><span id="dataHum3">N/A</span></td>
+        </tr>
+        <tr>
+          <th>Độ ẩm đất</th>
+          <td><span id="dataHumd1">N/A</span></td>
+          <td><span id="dataHumd2">N/A</span></td>
+          <td><span id="dataHumd3">N/A</span></td>
+        </tr>
+        <tr>
+          <th>Cường độ sáng</th>
+          <td><span id="dataLight1">N/A</span></td>
+          <td><span id="dataLight2">N/A</span></td>
+          <td><span id="dataLight3">N/A</span></td>
+        </tr>
+      </table>
+    </div>
+    <div id="Message">Dữ liệu thô:
+      <div id="lblMessage-Wrapper">
+        <div id="lblMessage"></div>
+      </div>
+      <input id="btnDownload" type="button" value="Tải về"></input>
+    </div>
+  </div>
+  <style>
+    #Status,
+    #Data,
+    #Message {
+      padding-bottom: 1rem;
+    }
+
+    .pnlDashboard {
+      display: none;
+    }
+
+    table#tblData {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table#tblData,
+    table#tblData th,
+    table#tblData td {
+      border: 1px solid #e0e0e0;
+    }
+
+    table#tblData th,
+    table#tblData td {
+      padding: .5rem;
+      text-align: left;
+    }
+
+    table#tblData th {
+      background-color: #f5f5f5;
+    }
+
+    #lblMessage-Wrapper {
+      overflow-y: scroll;
+      width: 100%;
+      height: 100px;
+      margin: .5rem 0 0;
+      border: 1px solid #e0e0e0;
+    }
+
+    #lblMessage {
+      padding: .5rem;
+    }
+  </style>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.2/mqttws31.min.js"></script>
+  <script type="text/javascript">
+  MQTT_SERVER = "broker.hivemq.com";
+  MQTT_SERVERPORT = 8000;
+  MQTT_USERNAME = "phatvu1294";
+  MQTT_PASSWORD = "122994";
+  TOPIC_PUBLISH = "phatvu1294/publish/iot";
+  TOPIC_SUBSCRIBE = "phatvu1294/subscribe/iot";
+
+  var client = new Paho.MQTT.Client(MQTT_SERVER, MQTT_SERVERPORT, "ESP32LoRaClient-" + parseInt(Math.random() * 100, 10));
+
+  client.onConnectionLost = function(responseObject) {
+    $('#lblStatus').html("<font color=\"red\">Mất kết nối! Vui lòng tải lại trang. Mã lỗi: " + responseObject.errorMessage + "</font>");
+  };
+
+  client.onMessageArrived = function(message) {
+    if (message.destinationName == TOPIC_PUBLISH) {
+      var msg = message.payloadString;
+
+      var data = msg.split(',');
+      if (data[0] == "10001") {
+        $('#dataID1').text(data[0]);
+        $('#dataTemp1').text(data[1] + "\xB0C");
+        $('#dataHum1').text(data[2] + "%");
+        $('#dataHumd1').text(data[3] + "%");
+        $('#dataLight1').text(data[4] + "lx");
+      } else if (data[0] == "10002") {
+        $('#dataID2').text(data[0]);
+        $('#dataTemp2').text(data[1] + "\xB0C");
+        $('#dataHum2').text(data[2] + "%");
+        $('#dataHumd2').text(data[3] + "%");
+        $('#dataLight2').text(data[4] + "lx");
+      } else if (data[0] == "10003") {
+        $('#dataID3').text(data[0]);
+        $('#dataTemp3').text(data[1] + "\xB0C");
+        $('#dataHum3').text(data[2] + "%");
+        $('#dataHumd3').text(data[3] + "%");
+        $('#dataLight3').text(data[4] + "lx");
+      }
+
+      var now = new Date(Date.now());
+      var time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+
+      $('#lblMessage').prepend(time + " >> ID:" + data[0] + ", nhiệt độ:" + data[1] + "\xB0C, độ ẩm:" + data[2] + "%, độ ẩm đất:" + data[3] + "%, cường độ sáng:" + data[4] + "lx<br>");
+    }
+  };
+
+  var publish = function(payload, topic, qos, retained) {
+    var message = new Paho.MQTT.Message(payload);
+    message.destinationName = topic;
+    message.qos = qos;
+    message.retained = retained;
+    client.send(message);
+  };
+
+  $(document).ready(function() {
+    $('#btnDownload').click(function(e) {
+      e.preventDefault();
+      download($('#lblMessage').text(), 'backup.txt', 'text/plain');
+    });
+
+    $('#btnOK').click(function(e) {
+      e.preventDefault();
+      if ($('#edtPass').val() == '12291994') {
+        $('.pnlDashboard').show();
+        $('.pnlLogin').hide();
+        $('#lblStatus').html("<font color=\"blue\">Đang kết nối...</font>");
+      }
+    });
+
+    $('#edtPass').keypress(function(e) {
+      if (e.which == 13) {
+        e.preventDefault();
+        if ($('#edtPass').val() == '12291994') {
+          $('.pnlDashboard').show();
+          $('.pnlLogin').hide();
+        }
+        $('#lblStatus').html("<font color=\"blue\">Đang kết nối...</font>");
+      }
+    });
+
+    client.connect({
+      userName: MQTT_USERNAME,
+      password: MQTT_PASSWORD,
+      timeout: 3,
+      onSuccess: function() {
+        $('#lblStatus').html("<font color=\"green\">Đã kết nối!</font>");
+        client.subscribe(TOPIC_PUBLISH, { qos: 0 });
+      },
+      onFailure: function(message) {
+        $('#lblStatus').html("<font color=\"red\">Kết nối thất bại! Vui lòng tải lại trang. Mã lỗi: " + message.errorMessage + "</font>");
+      }
+    });
+  });
+
+  function download(data, filename, type) {
+    var file = new Blob([data], { type: type });
+    if (window.navigator.msSaveOrOpenBlob)
+      window.navigator.msSaveOrOpenBlob(file, filename);
+    else {
+      var a = document.createElement("a"),
+        url = URL.createObjectURL(file);
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function() {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 0);
+    }
+  }
+  </script>
+</body>
+
+</html>
