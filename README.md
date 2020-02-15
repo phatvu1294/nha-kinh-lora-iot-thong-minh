@@ -1,2 +1,2 @@
 # IOT LoRa Smart Greenhouse
-Nhà kính thông minh ứng dụng công nghệ LoRa và IOT
+*IOT LoRa Smart Greenhouse được phát triển dựa trên ESP8266, Arduino, LoRa*  
