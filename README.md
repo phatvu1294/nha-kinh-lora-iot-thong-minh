@@ -3,6 +3,7 @@
 
 ### Giới thiệu
 Hệ thống bao gồm 2 Node có nhiệm vụ thu thập dữ liệu sau đó gửi về Gateway thông qua công nghệ LoRa. Dữ liệu này sẽ được Gateway xử lý và đẩy lên Website thông qua giao thức MQTT. Giao diện Website được thiết kế với Blogger cho phép giám sát các thông số ở bất kỳ nơi đâu mà chúng ta có internet.
+![IOT LoRa Smart Greenhouse](/images/iot-lora-smart-greenhouse-1.png)
 
 ### Tính năng
 - Với IOT chúng ta có thể theo dõi thiết bị ở mọi nơi miễn là có internet
