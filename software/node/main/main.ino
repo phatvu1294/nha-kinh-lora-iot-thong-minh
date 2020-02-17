@@ -10,16 +10,16 @@
 #include "DHT.h"
 
 // Định nghĩa LoRa
-#define COORD_ADDR  100
-#define NODE_ADDR   101
-#define NODE_ID     10001
+#define GATEWAY_ADDR    100
+#define NODE_ADDR       101
+#define NODE_ID         1001
 
 // Định nghĩa DHT và độ ẩm đất
-#define DHT11_PIN   3
-#define HUMD_PIN    A3
+#define DHT11_PIN       9
+#define HUMD_PIN        A0
 
 // Biến LCD
-LiquidCrystal lcd(9, 8, 7, 6, 5, 4);
+LiquidCrystal lcd(8, 7, 6, 5, 4, 3);
 
 // Biến LoRa
 RH_RF95 driver;
@@ -38,65 +38,72 @@ char buff[17] = "";
 
 // Hàm khởi tạo
 void setup() {
-  // Khởi tạo LCD
-  lcd.begin(16, 2);
-  // Khởi tạo Serial
-  Serial.begin(9600);
-  while (!Serial);
-  // Khởi tạo LoRa
-  manager.init();
-  driver.setModemConfig(RH_RF95::Bw125Cr48Sf4096);
-  driver.setTxPower(23);
-  // Khởi tạo DHT
-  dht.begin();
+    // Khởi tạo LCD
+    lcd.begin(16, 2);
+    lcd.clear();
+    // Khởi tạo Serial
+    Serial.begin(9600);
+    while (!Serial);
+    // Khởi tạo LoRa
+    manager.init();
+    driver.setModemConfig(RH_RF95::Bw125Cr48Sf4096);
+    driver.setTxPower(23);
+    // Khởi tạo DHT
+    dht.begin();
 }
 
 // Hàm lặp vô hạn
 void loop() {
-  // Nếu LoRa sẵn sàng nhận dữ liệu
-  if (manager.available()) {
-    // Biến đọc dữ liệu LoRa
-    uint8_t len = sizeof(buf);
-    uint8_t from;
-    // Nếu nhận được dữ liệu LoRa
-    if (manager.recvfrom(buf, &len, &from)) {
-      // Nếu từ Coord thì
-      if (from == COORD_ADDR) {
-        // Khởi tạo chuỗi dữ liệu
-        String dataStr = String(NODE_ID) + "," + String(temp, 1) + "," + String(hum, 1) + "," + String(humd, 0);
-        // Biến mảng dữ liệu
-        char dataArr[126];
-        // Chuyển chuỗi dữ liệu sang mảng dữ liệu
-        dataStr.toCharArray(dataArr, sizeof(dataArr));
-        // Gửi dữ liệu LoRa
-        manager.sendto((uint8_t *)dataArr, (uint8_t)sizeof(dataArr), from);
-        // Chờ gửi LoRa thành công
-        manager.waitPacketSent();
-      }
+    // Nếu LoRa sẵn sàng nhận dữ liệu
+    if (manager.available()) {
+        // Biến đọc dữ liệu LoRa
+        uint8_t len = sizeof(buf);
+        uint8_t from;
+        // Nếu nhận được dữ liệu LoRa
+        if (manager.recvfrom(buf, &len, &from)) {
+            // Nếu từ Coord thì
+            if (from == GATEWAY_ADDR) {
+                // Khởi tạo chuỗi dữ liệu
+                String dataStr = String(NODE_ID) + "," + String(temp, 1) + "," + String(hum, 1) + "," + String(humd, 0);
+                // Biến mảng dữ liệu
+                char dataArr[126];
+                // Chuyển chuỗi dữ liệu sang mảng dữ liệu
+                dataStr.toCharArray(dataArr, sizeof(dataArr));
+                // Gửi dữ liệu LoRa
+                manager.sendto((uint8_t *)dataArr, (uint8_t)sizeof(dataArr), from);
+                // Hiện thông tin ID
+                lcd.setCursor(9, 1);
+                lcd.print("ID=");
+                lcd.print(String(NODE_ID));
+                // Chờ gửi LoRa thành công
+                manager.waitPacketSent();
+                lcd.setCursor(9, 1);
+                lcd.print(String("       "));
+            }
+        }
     }
-  }
-  // Định thời với thời gian đặt trước
-  unsigned long currMillis = millis();
-  if (currMillis - prevMillis >= interval || prevMillis == 0) {
-    prevMillis = currMillis;
-    // Đọc giá trị nhiệt độ và độ ẩm
-    hum = dht.readHumidity();
-    temp = dht.readTemperature();
-    // Đọc giá trị độ ẩm đất
-    humd = ((1023 - analogRead(HUMD_PIN)) / 1023.0) * 100;
-    // Hiển thị LCD
-    lcd.setCursor(0, 0);
-    lcd.print("T=");
-    lcd.print(temp, 1);
-    lcd.write(0xDF);
-    lcd.print("  ");
-    lcd.setCursor(9, 0);
-    lcd.print("H=");
-    lcd.print(hum, 1);
-    lcd.print("%  ");
-    lcd.setCursor(0, 1);
-    lcd.print("HD=");
-    lcd.print(humd, 1);
-    lcd.print("%  ");
-  }
+    // Định thời với thời gian đặt trước
+    unsigned long currMillis = millis();
+    if (currMillis - prevMillis >= interval || prevMillis == 0) {
+        prevMillis = currMillis;
+        // Đọc giá trị nhiệt độ và độ ẩm
+        hum = dht.readHumidity();
+        temp = dht.readTemperature();
+        // Đọc giá trị độ ẩm đất
+        humd = ((1023 - analogRead(HUMD_PIN)) / 1023.0) * 100;
+        // Hiển thị LCD
+        lcd.setCursor(0, 0);
+        lcd.print("T=");
+        lcd.print(temp, 1);
+        lcd.write(0xDF);
+        lcd.print("  ");
+        lcd.setCursor(9, 0);
+        lcd.print("H=");
+        lcd.print(hum, 1);
+        lcd.print("%  ");
+        lcd.setCursor(0, 1);
+        lcd.print("HD=");
+        lcd.print(humd, 1);
+        lcd.print("%  ");
+    }
 }

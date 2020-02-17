@@ -3,7 +3,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>ESP32 LoRa Dashboard</title>
+  <title>IOT LoRa Smart Greenhouse</title>
 </head>
 
 <body>
@@ -20,37 +20,26 @@
           <th></th>
           <th>Vị trí 1</th>
           <th>Vị trí 2</th>
-          <th>Vị trí 3</th>
         </tr>
         <tr>
           <th>ID</th>
           <td><span id="dataID1">N/A</span></td>
           <td><span id="dataID2">N/A</span></td>
-          <td><span id="dataID3">N/A</span></td>
         </tr>
         <tr>
           <th>Nhiệt độ</th>
           <td><span id="dataTemp1">N/A</span></td>
           <td><span id="dataTemp2">N/A</span></td>
-          <td><span id="dataTemp3">N/A</span></td>
         </tr>
         <tr>
           <th>Độ ẩm</th>
           <td><span id="dataHum1">N/A</span></td>
           <td><span id="dataHum2">N/A</span></td>
-          <td><span id="dataHum3">N/A</span></td>
         </tr>
         <tr>
           <th>Độ ẩm đất</th>
           <td><span id="dataHumd1">N/A</span></td>
           <td><span id="dataHumd2">N/A</span></td>
-          <td><span id="dataHumd3">N/A</span></td>
-        </tr>
-        <tr>
-          <th>Cường độ sáng</th>
-          <td><span id="dataLight1">N/A</span></td>
-          <td><span id="dataLight2">N/A</span></td>
-          <td><span id="dataLight3">N/A</span></td>
         </tr>
       </table>
     </div>
@@ -110,10 +99,8 @@
   <script type="text/javascript">
   MQTT_SERVER = "broker.hivemq.com";
   MQTT_SERVERPORT = 8000;
-  MQTT_USERNAME = "phatvu1294";
-  MQTT_PASSWORD = "122994";
-  TOPIC_PUBLISH = "phatvu1294/publish/iot";
-  TOPIC_SUBSCRIBE = "phatvu1294/subscribe/iot";
+  TOPIC_PUBLISH = "phatvu1294/iot-lora-smart-garden/publish";
+  TOPIC_SUBSCRIBE = "phatvu1294/iot-lora-smart-garden/subscribe";
 
   var client = new Paho.MQTT.Client(MQTT_SERVER, MQTT_SERVERPORT, "ESP32LoRaClient-" + parseInt(Math.random() * 100, 10));
 
@@ -126,30 +113,22 @@
       var msg = message.payloadString;
 
       var data = msg.split(',');
-      if (data[0] == "10001") {
+      if (data[0] == "1001") {
         $('#dataID1').text(data[0]);
         $('#dataTemp1').text(data[1] + "\xB0C");
         $('#dataHum1').text(data[2] + "%");
         $('#dataHumd1').text(data[3] + "%");
-        $('#dataLight1').text(data[4] + "lx");
-      } else if (data[0] == "10002") {
+      } else if (data[0] == "1002") {
         $('#dataID2').text(data[0]);
         $('#dataTemp2').text(data[1] + "\xB0C");
         $('#dataHum2').text(data[2] + "%");
         $('#dataHumd2').text(data[3] + "%");
-        $('#dataLight2').text(data[4] + "lx");
-      } else if (data[0] == "10003") {
-        $('#dataID3').text(data[0]);
-        $('#dataTemp3').text(data[1] + "\xB0C");
-        $('#dataHum3').text(data[2] + "%");
-        $('#dataHumd3').text(data[3] + "%");
-        $('#dataLight3').text(data[4] + "lx");
       }
 
       var now = new Date(Date.now());
       var time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
 
-      $('#lblMessage').prepend(time + " >> ID:" + data[0] + ", nhiệt độ:" + data[1] + "\xB0C, độ ẩm:" + data[2] + "%, độ ẩm đất:" + data[3] + "%, cường độ sáng:" + data[4] + "lx<br>");
+      $('#lblMessage').prepend(time + " >> ID:" + data[0] + ", nhiệt độ:" + data[1] + "\xB0C, độ ẩm:" + data[2] + "%, độ ẩm đất:" + data[3] + "%<br>");
     }
   };
 
@@ -172,10 +151,10 @@
       if ($('#edtPass').val() == '12291994') {
         $('.pnlDashboard').show();
         $('.pnlLogin').hide();
-        $('#lblStatus').html("<font color=\"blue\">Đang kết nối...</font>");
       }
     });
-
+    
+    // Mật khẩu: 12291994
     $('#edtPass').keypress(function(e) {
       if (e.which == 13) {
         e.preventDefault();
@@ -183,13 +162,10 @@
           $('.pnlDashboard').show();
           $('.pnlLogin').hide();
         }
-        $('#lblStatus').html("<font color=\"blue\">Đang kết nối...</font>");
       }
     });
 
     client.connect({
-      userName: MQTT_USERNAME,
-      password: MQTT_PASSWORD,
       timeout: 3,
       onSuccess: function() {
         $('#lblStatus').html("<font color=\"green\">Đã kết nối!</font>");
