@@ -41,11 +41,11 @@
 // LCD I2C
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-// Biến MQTT
+// MQTT
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// Biến LoRa
+// LoRa
 RH_RF95 driver(16, 15);
 RHDatagram manager(driver, GATEWAY_ADDR);
 uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -104,9 +104,10 @@ void setup() {
 
     // Kết nối tới Wifi
     WifiConnect();
+    
     // Đặt các thông số MQTT
     client.setServer(MQTT_SERVER, MQTT_SERVERPORT);
-    client.setCallback(MQTTCallback);
+    
     // Khởi tạo LoRa
     manager.init();
     driver.setModemConfig(RH_RF95::Bw125Cr48Sf4096);
@@ -120,8 +121,10 @@ void loop() {
         // Kết nối tới MQTT
         MQTTConnect();
     }
+    
     // Lặp MQTT
     client.loop();
+    
     // Nếu LoRa sẵn sàng nhận dữ liệu
     if (manager.available()) {
         // Biến đọc dữ liệu LoRa
@@ -131,13 +134,7 @@ void loop() {
         if (manager.recvfrom(buf, &len, &from)) {
             // Khởi tạo chuỗi dữ liệu bộ đệm
             String bufStr = (char *)buf;
-            // Nếu là Node 1
-            if (from == NODE1_ADDR) {
-                // Làm việc gì đó
-                // Nếu là Node 2
-            } else if (from = NODE2_ADDR) {
-                // Làm việc gì đó
-            }
+            
             // In chuỗi nhận được
             Serial.println(bufStr);
 
@@ -145,6 +142,7 @@ void loop() {
             client.publish(TOPIC_PUBLISH, bufStr.c_str(), true);
         }
     }
+    
     // Định thời với thời gian đặt trước
     unsigned long currMillis = millis();
     if (currMillis - prevMillis >= interval || prevMillis == 0) {
@@ -157,6 +155,7 @@ void loop() {
             // Đặt lại bộ đếm
             nodeCounter = 0;
         }
+        
         // Nếu bộ đếm LoRa bằng 0
         if (nodeCounter == 0) {
             // Địa chỉ LoRa là Node 1
@@ -248,17 +247,5 @@ void MQTTConnect() {
         } else { // Ngược lại
             delay(5000);
         }
-    }
-}
-
-// Hàm gọi về MQTT
-void MQTTCallback(char* topic, byte* payload, unsigned int length) {
-    // Khởi tạo chuỗi topic
-    String topicStr = String(topic);
-    // Khởi tạo chuỗi payload (message)
-    String payloadStr = "";
-    // Đọc toàn bộ payload
-    for (unsigned int i = 0; i < length; i++) {
-        payloadStr += (char)payload[i];
     }
 }
